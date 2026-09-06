@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Session } from '@supabase/supabase-js'
@@ -19,7 +19,7 @@ const personalWorkspace: WorkspaceContext = {
   enabledModuleIds: ['example'],
 }
 
-function renderDashboard(setActiveWorkspaceId = vi.fn()) {
+function renderDashboard() {
   return render(
     <MemoryRouter>
       <AuthContext.Provider value={{ session: { user: { email: 'user@example.com' } } as Session, loading: false, signOut: vi.fn() }}>
@@ -28,7 +28,7 @@ function renderDashboard(setActiveWorkspaceId = vi.fn()) {
           activeWorkspace: personalWorkspace,
           loading: false,
           error: null,
-          setActiveWorkspaceId,
+          setActiveWorkspaceId: vi.fn(),
         }}>
           <DashboardPage />
         </WorkspaceContextState.Provider>
@@ -48,12 +48,10 @@ describe('DashboardPage launcher', () => {
     expect(screen.queryByLabelText('Open Tasks')).not.toBeInTheDocument()
   })
 
-  it('keeps the workspace selector connected to the existing workspace context', () => {
-    const setActiveWorkspaceId = vi.fn()
-    renderDashboard(setActiveWorkspaceId)
+  it('shows the active workspace while workspace switching lives in the account menu', () => {
+    renderDashboard()
 
-    fireEvent.change(screen.getByLabelText('Active workspace'), { target: { value: 'household-workspace' } })
-
-    expect(setActiveWorkspaceId).toHaveBeenCalledWith('household-workspace')
+    expect(screen.getByText('Personal')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Active workspace')).not.toBeInTheDocument()
   })
 })

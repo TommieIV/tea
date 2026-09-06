@@ -11,7 +11,7 @@ function DashboardReport({ load }: { load: NonNullable<(typeof moduleRegistry)[n
 }
 
 export function DashboardPage() {
-  const { activeWorkspace, contexts, error, loading, setActiveWorkspaceId } = useWorkspace()
+  const { activeWorkspace, error, loading } = useWorkspace()
   const { session } = useAuth()
 
   if (loading) return <div className="page-loading">Loading workspace…</div>
@@ -28,12 +28,10 @@ export function DashboardPage() {
           <h1>Your apps</h1>
           {session?.user.email && <p className="launcher-user">Signed in as {session.user.email}</p>}
         </div>
-        <label className="workspace-switcher">
+        <div className="launcher-workspace">
           <span>Workspace</span>
-          <select value={activeWorkspace.workspaceId} onChange={(event) => setActiveWorkspaceId(event.target.value)} aria-label="Active workspace">
-            {contexts.map((context) => <option key={context.workspaceId} value={context.workspaceId}>{context.workspaceName}</option>)}
-          </select>
-        </label>
+          <strong>{activeWorkspace.workspaceName}</strong>
+        </div>
       </section>
 
       <section className="launcher-grid" aria-label="Apps">

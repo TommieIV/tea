@@ -1,13 +1,16 @@
 import { Link, Outlet } from 'react-router-dom'
+import { ChevronDown, UserRound } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
+import { useUserDisplayName } from '../auth/useUserDisplayName'
 import { useOnlineStatus } from '../pwa/useOnlineStatus'
 import { useWorkspace } from '../workspaces/useWorkspace'
 import teaHeader from '../../../logos/tea_header.png'
 
 export function AppShell() {
   const { session, signOut } = useAuth()
-  const { activeWorkspace } = useWorkspace()
+  const { activeWorkspace, contexts, setActiveWorkspaceId } = useWorkspace()
   const online = useOnlineStatus()
+  const displayName = useUserDisplayName(session?.user)
 
   return (
     <div className="app-shell">
@@ -18,9 +21,28 @@ export function AppShell() {
           </Link>
           <div className="topbar-actions">
             {!online && <span className="status-pill offline">Offline</span>}
-            {activeWorkspace && <span className="workspace-pill">{activeWorkspace.workspaceName}</span>}
-            {session?.user.email && <span className="account-label">{session.user.email}</span>}
-            <button className="button button-quiet" type="button" onClick={() => void signOut()} aria-label={`Sign out ${session?.user.email ?? ''}`}>Sign out</button>
+            <details className="account-menu">
+              <summary className="account-menu-trigger" aria-label={`Open account menu for ${displayName}`}>
+                <UserRound size={17} aria-hidden />
+                <span>{displayName}</span>
+                <ChevronDown size={15} aria-hidden />
+              </summary>
+              <div className="account-menu-panel">
+                <div className="account-menu-identity">
+                  <strong>{displayName}</strong>
+                  {session?.user.email && <span>{session.user.email}</span>}
+                </div>
+                {activeWorkspace && (
+                  <label className="account-workspace-switcher">
+                    <span>Workspace</span>
+                    <select value={activeWorkspace.workspaceId} onChange={(event) => setActiveWorkspaceId(event.target.value)} aria-label="Active workspace">
+                      {contexts.map((context) => <option key={context.workspaceId} value={context.workspaceId}>{context.workspaceName}</option>)}
+                    </select>
+                  </label>
+                )}
+                <button className="account-menu-sign-out" type="button" onClick={() => void signOut()}>Sign out</button>
+              </div>
+            </details>
           </div>
         </div>
       </header>
