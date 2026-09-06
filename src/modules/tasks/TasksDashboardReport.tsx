@@ -29,7 +29,7 @@ export default function TasksDashboardReport() {
         <strong>{report.openCount} open {report.openCount === 1 ? 'task' : 'tasks'}</strong>
       </div>
       <p>
-        {report.highPriorityCount} high priority · {report.overdueCount} overdue
+        {report.highPriorityCount} high · {report.mediumPriorityCount} medium · {report.overdueCount} overdue
       </p>
     </Link>
   )

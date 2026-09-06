@@ -3,6 +3,12 @@ import type { ComponentType } from 'react'
 import type { WorkspaceType } from '../workspaces/types'
 
 export type ModuleStatus = 'connected' | 'coming-soon'
+export type DashboardSeverity = 'none' | 'regular' | 'medium' | 'high'
+
+export type DashboardSignal = {
+  itemCount: number
+  severity: DashboardSeverity
+}
 
 export type ModuleManifest = {
   id: string
@@ -16,6 +22,7 @@ export type ModuleManifest = {
   supportedWorkspaceTypes: WorkspaceType[]
   permissions: string[]
   dashboardReport?: () => Promise<{ default: ComponentType }>
+  dashboardSignal?: (workspaceId: string) => Promise<DashboardSignal>
 }
 
 export const moduleRegistry: ModuleManifest[] = [
@@ -43,6 +50,7 @@ export const moduleRegistry: ModuleManifest[] = [
     supportedWorkspaceTypes: ['personal', 'household', 'business'],
     permissions: ['tasks.items.view'],
     dashboardReport: () => import('../../modules/tasks/TasksDashboardReport'),
+    dashboardSignal: (workspaceId) => import('../../modules/tasks/tasksApi').then(({ loadTasksDashboardSignal }) => loadTasksDashboardSignal(workspaceId)),
   },
   {
     id: 'future-module',

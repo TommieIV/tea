@@ -2,6 +2,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { ChevronDown, UserRound } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { useUserDisplayName } from '../auth/useUserDisplayName'
+import { DashboardDrawer } from '../dashboard/DashboardDrawer'
 import { useOnlineStatus } from '../pwa/useOnlineStatus'
 import { useWorkspace } from '../workspaces/useWorkspace'
 import teaHeader from '../../../logos/tea_header.png'
@@ -46,6 +47,7 @@ export function AppShell() {
           </div>
         </div>
       </header>
+      <DashboardDrawer />
       <main className="content"><Outlet /></main>
     </div>
   )

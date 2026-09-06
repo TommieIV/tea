@@ -124,10 +124,19 @@ export async function loadTasksDashboardReport(workspaceId: string): Promise<Tas
   const client = requireSupabase()
   const { data, error } = await client.rpc('tasks_get_dashboard_report', { target_workspace_id: workspaceId }).single()
   if (error) throw error
-  const report = data as { open_count: number; high_priority_count: number; overdue_count: number }
+  const report = data as { open_count: number; high_priority_count: number; medium_priority_count: number; overdue_count: number }
   return {
     openCount: report.open_count,
     highPriorityCount: report.high_priority_count,
+    mediumPriorityCount: report.medium_priority_count ?? 0,
     overdueCount: report.overdue_count,
+  }
+}
+
+export async function loadTasksDashboardSignal(workspaceId: string) {
+  const report = await loadTasksDashboardReport(workspaceId)
+  return {
+    itemCount: report.openCount,
+    severity: report.highPriorityCount > 0 ? 'high' as const : report.mediumPriorityCount > 0 ? 'medium' as const : report.openCount > 0 ? 'regular' as const : 'none' as const,
   }
 }

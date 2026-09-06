@@ -119,6 +119,8 @@ Every enabled module must expose a lightweight, workspace-scoped dashboard repor
 
 The module owns the data query, summary rules, permissions, and empty/error states for its report. Core only hosts and renders the declared report; it must not absorb module business logic. Reports should be permission-aware, inexpensive to load, and avoid loading a module's full dataset on the Dashboard.
 
+When a shared dashboard badge or attention state is useful, a module may also expose a lightweight count-and-severity signal. Core may aggregate and present those signals, but the module owns its meaning and calculation.
+
 ## Module Isolation
 A module should own its feature-specific pages/screens, components, business logic, data access helpers, types/models, tests, and documentation. Shared UI, hooks, auth, navigation, notification services, offline/sync helpers, API clients, and truly reusable utilities belong in Core/shared areas.
 

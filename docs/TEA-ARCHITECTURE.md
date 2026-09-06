@@ -89,6 +89,8 @@ Visible launcher cards + summaries
 
 Each enabled module supplies a concise, workspace-scoped dashboard report unless it has a documented exemption. The report belongs to the module and is permission-aware; Core renders it without taking on module-specific queries or business rules. Reports should surface actionable state without loading a module's full dataset.
 
+A module may also supply a lightweight dashboard signal containing an item count and an attention severity (`none`, `regular`, `medium`, or `high`). Core may aggregate those signals for shared dashboard affordances such as badges and visual emphasis, while each module remains responsible for deciding what its count and severity mean.
+
 ## Data Ownership
 Data should clearly belong to a user/personal context, a workspace, or Core/system. Avoid giant catch-all tables. Where appropriate, module records should carry a workspace identifier so household/business data remains separated.
 

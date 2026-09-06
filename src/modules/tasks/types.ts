@@ -23,5 +23,6 @@ export type TaskSettings = {
 export type TasksDashboardReport = {
   openCount: number
   highPriorityCount: number
+  mediumPriorityCount: number
   overdueCount: number
 }
