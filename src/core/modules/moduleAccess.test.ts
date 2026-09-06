@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { FlaskConical } from 'lucide-react'
-import { canAccessModule } from './moduleAccess'
+import { canAccessModule, isModuleVisibleInLauncher } from './moduleAccess'
 import type { ModuleManifest } from './registry'
 import type { WorkspaceContext } from '../workspaces/types'
 
@@ -31,5 +31,11 @@ describe('canAccessModule', () => {
     expect(canAccessModule(module, { ...workspace, enabledModuleIds: [] })).toBe(false)
     expect(canAccessModule(module, { ...workspace, permissionKeys: [] })).toBe(false)
     expect(canAccessModule(module, { ...workspace, workspaceType: 'business' })).toBe(false)
+  })
+
+  it('hides connected modules that are unavailable while retaining eligible Coming Soon modules', () => {
+    expect(isModuleVisibleInLauncher(module, { ...workspace, permissionKeys: [] })).toBe(false)
+    expect(isModuleVisibleInLauncher({ ...module, status: 'coming-soon', permissions: [] }, workspace)).toBe(true)
+    expect(isModuleVisibleInLauncher({ ...module, status: 'coming-soon', permissions: [], supportedWorkspaceTypes: ['business'] }, workspace)).toBe(false)
   })
 })

@@ -8,3 +8,7 @@ export function canAccessModule(module: ModuleManifest, workspace: WorkspaceCont
     && module.permissions.every((permission) => workspace.permissionKeys.includes(permission))
 }
 
+export function isModuleVisibleInLauncher(module: ModuleManifest, workspace: WorkspaceContext) {
+  return canAccessModule(module, workspace)
+    || (module.status === 'coming-soon' && module.supportedWorkspaceTypes.includes(workspace.workspaceType))
+}
