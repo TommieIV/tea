@@ -114,6 +114,11 @@ The Dashboard is TEA's launcher/home screen. It should determine: who is logged 
 
 The Dashboard should not contain the full business logic of every module.
 
+## Dashboard Reporting Contract
+Every enabled module must expose a lightweight, workspace-scoped dashboard report unless it has an explicit, documented exemption. A report should give a brief, actionable view of the module's current state—for example, a task module could report the number of incomplete tasks, high-priority items, and overdue items.
+
+The module owns the data query, summary rules, permissions, and empty/error states for its report. Core only hosts and renders the declared report; it must not absorb module business logic. Reports should be permission-aware, inexpensive to load, and avoid loading a module's full dataset on the Dashboard.
+
 ## Module Isolation
 A module should own its feature-specific pages/screens, components, business logic, data access helpers, types/models, tests, and documentation. Shared UI, hooks, auth, navigation, notification services, offline/sync helpers, API clients, and truly reusable utilities belong in Core/shared areas.
 

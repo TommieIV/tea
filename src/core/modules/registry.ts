@@ -1,4 +1,5 @@
-import { FlaskConical, type LucideIcon } from 'lucide-react'
+import { FlaskConical, ListTodo, type LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
 import type { WorkspaceType } from '../workspaces/types'
 
 export type ModuleStatus = 'connected' | 'coming-soon'
@@ -14,6 +15,7 @@ export type ModuleManifest = {
   classification: 'generic' | 'private' | 'business' | 'experimental'
   supportedWorkspaceTypes: WorkspaceType[]
   permissions: string[]
+  dashboardReport?: () => Promise<{ default: ComponentType }>
 }
 
 export const moduleRegistry: ModuleManifest[] = [
@@ -30,6 +32,19 @@ export const moduleRegistry: ModuleManifest[] = [
     permissions: ['example.overview.view'],
   },
   {
+    id: 'tasks',
+    name: 'Tasks',
+    version: '0.1.0',
+    route: '/modules/tasks',
+    description: 'Capture, prioritize, and complete work in the current workspace.',
+    icon: ListTodo,
+    status: 'connected',
+    classification: 'generic',
+    supportedWorkspaceTypes: ['personal', 'household', 'business'],
+    permissions: ['tasks.items.view'],
+    dashboardReport: () => import('../../modules/tasks/TasksDashboardReport'),
+  },
+  {
     id: 'future-module',
     name: 'More modules',
     version: '0.0.0',
@@ -41,4 +56,3 @@ export const moduleRegistry: ModuleManifest[] = [
     permissions: [],
   },
 ]
-

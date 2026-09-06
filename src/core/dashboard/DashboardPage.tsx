@@ -1,7 +1,13 @@
+import { lazy, Suspense, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { moduleRegistry } from '../modules/registry'
 import { canAccessModule } from '../modules/moduleAccess'
 import { useWorkspace } from '../workspaces/useWorkspace'
+
+function DashboardReport({ load }: { load: NonNullable<(typeof moduleRegistry)[number]['dashboardReport']> }) {
+  const Report = useMemo(() => lazy(load), [load])
+  return <Suspense fallback={<div className="dashboard-report loading">Loading summary…</div>}><Report /></Suspense>
+}
 
 export function DashboardPage() {
   const { activeWorkspace, contexts, error, loading, setActiveWorkspaceId } = useWorkspace()
@@ -24,6 +30,11 @@ export function DashboardPage() {
             </select>
           </label>
         )}
+      </section>
+      <section className="dashboard-reports" aria-label="Module summaries">
+        {moduleRegistry.filter((module) => canAccessModule(module, activeWorkspace) && module.dashboardReport).map((module) => (
+          <DashboardReport key={module.id} load={module.dashboardReport!} />
+        ))}
       </section>
       <section className="module-grid" aria-label="Modules">
         {moduleRegistry.map((module) => {

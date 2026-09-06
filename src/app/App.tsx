@@ -9,6 +9,8 @@ import { WorkspaceProvider } from '../core/workspaces/WorkspaceProvider'
 import { ModuleGuard } from '../core/modules/ModuleGuard'
 
 const ExampleModulePage = lazy(() => import('../modules/example/ExampleModulePage'))
+const TasksModulePage = lazy(() => import('../modules/tasks/TasksModulePage'))
+const TasksSettingsPage = lazy(() => import('../modules/tasks/TasksSettingsPage'))
 
 function ModuleFallback() {
   return <div className="page-loading">Loading module…</div>
@@ -35,6 +37,26 @@ export function App() {
               <ModuleGuard moduleId="example">
                 <Suspense fallback={<ModuleFallback />}>
                   <ExampleModulePage />
+                </Suspense>
+              </ModuleGuard>
+            }
+          />
+          <Route
+            path="/modules/tasks"
+            element={
+              <ModuleGuard moduleId="tasks">
+                <Suspense fallback={<ModuleFallback />}>
+                  <TasksModulePage />
+                </Suspense>
+              </ModuleGuard>
+            }
+          />
+          <Route
+            path="/modules/tasks/settings"
+            element={
+              <ModuleGuard moduleId="tasks">
+                <Suspense fallback={<ModuleFallback />}>
+                  <TasksSettingsPage />
                 </Suspense>
               </ModuleGuard>
             }

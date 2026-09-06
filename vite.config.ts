@@ -9,21 +9,21 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['tea-mark.svg'],
+      includeAssets: ['tea_fav.png'],
       manifest: {
         name: 'TEA',
         short_name: 'TEA',
         description: 'A modular workspace platform.',
-        theme_color: '#0f766e',
-        background_color: '#f8fafc',
+        theme_color: '#b5121b',
+        background_color: '#fff8f8',
         display: 'standalone',
         start_url: '/',
         icons: [
           {
-            src: 'tea-mark.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
+            src: 'tea_fav.png',
+            sizes: '1254x1254',
+            type: 'image/png',
+            purpose: 'any',
           },
         ],
       },
@@ -34,4 +34,3 @@ export default defineConfig({
     }),
   ],
 })
-

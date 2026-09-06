@@ -74,7 +74,7 @@ Roles are convenient bundles of permissions. Friendly role names may include Own
 ## Dashboard
 The Dashboard is TEA's launcher/home screen. It should answer who is logged in, which workspace is active, which modules are enabled, which modules the user can access, and what useful summaries should be surfaced.
 
-Later, modules may provide lightweight summaries such as events today, open tasks, bills due, vehicle reminders, or active projects. The business logic remains inside each module.
+Each enabled module should provide a lightweight, workspace-scoped dashboard report unless it has a documented exemption. Reports may summarize events today, open tasks, bills due, vehicle reminders, or active projects. The business logic and report query remain inside each module; Core only hosts the result.
 
 ## Module Enablement
 Not every workspace needs every module. Household and Business workspaces may have different enabled module sets.

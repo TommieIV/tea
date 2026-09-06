@@ -9,7 +9,7 @@ This is a design philosophy, not a literal operating system.
 ## Core vs Modules
 Core owns authentication, users, workspaces, memberships, roles/permissions, navigation, module registry, PWA shell, shared services, and security infrastructure.
 
-Modules own feature-specific pages, business logic, feature data, module-specific permissions, optional dashboard summaries, and module documentation.
+Modules own feature-specific pages, business logic, feature data, module-specific permissions, dashboard reports, and module documentation.
 
 Core should know how to **host modules**, not how every module works.
 
@@ -86,6 +86,8 @@ User permissions
       ↓
 Visible launcher cards + summaries
 ```
+
+Each enabled module supplies a concise, workspace-scoped dashboard report unless it has a documented exemption. The report belongs to the module and is permission-aware; Core renders it without taking on module-specific queries or business rules. Reports should surface actionable state without loading a module's full dataset.
 
 ## Data Ownership
 Data should clearly belong to a user/personal context, a workspace, or Core/system. Avoid giant catch-all tables. Where appropriate, module records should carry a workspace identifier so household/business data remains separated.

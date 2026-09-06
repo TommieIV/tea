@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth'
 import { supabase } from '../auth/supabase'
 import type { WorkspaceContext } from './types'
 import { WorkspaceContextState } from './WorkspaceContext'
+import { mapWorkspaceContexts } from './workspaceContextMapper'
 const activeWorkspaceStorageKey = 'tea.active-workspace-id'
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
@@ -23,7 +24,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      const nextContexts = (data ?? []) as WorkspaceContext[]
+      const nextContexts = mapWorkspaceContexts(data)
       const savedId = window.localStorage.getItem(activeWorkspaceStorageKey)
       setContexts(nextContexts)
       setStoredActiveWorkspaceId(nextContexts.some((context) => context.workspaceId === savedId) ? savedId : (nextContexts[0]?.workspaceId ?? null))

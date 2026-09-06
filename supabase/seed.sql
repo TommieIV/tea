@@ -1,4 +1,7 @@
--- Local-development account. Change this password before exposing any deployed project.
+-- LOCAL DEVELOPMENT ONLY — never run this file against a hosted Supabase project.
+-- It creates a deterministic demo Auth account directly in auth.users, which is
+-- supported only by the local development stack. Use
+-- bootstrap/initial-hosted-user.sql for the first hosted TEA user instead.
 -- The values live only in the database seed, never in the frontend application.
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,

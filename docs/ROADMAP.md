@@ -129,7 +129,7 @@ This is a running roadmap. Do not attempt to complete the entire roadmap at once
 - [ ] Define purpose and supported workspace types
 - [ ] Define permissions and data ownership
 - [ ] Define routes/screens and offline requirements
-- [ ] Define Dashboard integration
+- [ ] Define the module's concise, workspace-scoped dashboard report, or document its exemption
 - [ ] Add module README
 - [ ] Build in focused tasks
 - [ ] Test independently and with Core
