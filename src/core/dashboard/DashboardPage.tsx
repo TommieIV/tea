@@ -1,18 +1,10 @@
-import { lazy, Suspense, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { moduleRegistry } from '../modules/registry'
 import { canAccessModule, isModuleVisibleInLauncher } from '../modules/moduleAccess'
-import { useAuth } from '../auth/useAuth'
 import { useWorkspace } from '../workspaces/useWorkspace'
-
-function DashboardReport({ load }: { load: NonNullable<(typeof moduleRegistry)[number]['dashboardReport']> }) {
-  const Report = useMemo(() => lazy(load), [load])
-  return <Suspense fallback={<div className="dashboard-report loading">Loading summary…</div>}><Report /></Suspense>
-}
 
 export function DashboardPage() {
   const { activeWorkspace, error, loading } = useWorkspace()
-  const { session } = useAuth()
 
   if (loading) return <div className="page-loading">Loading workspace…</div>
   if (error) return <div className="empty-state">{error} Check that the database migration and seed have been applied.</div>
@@ -22,18 +14,6 @@ export function DashboardPage() {
 
   return (
     <div className="launcher-page">
-      <section className="launcher-top" aria-label="Current workspace">
-        <div>
-          <div className="eyebrow">TEA home</div>
-          <h1>Your apps</h1>
-          {session?.user.email && <p className="launcher-user">Signed in as {session.user.email}</p>}
-        </div>
-        <div className="launcher-workspace">
-          <span>Workspace</span>
-          <strong>{activeWorkspace.workspaceName}</strong>
-        </div>
-      </section>
-
       <section className="launcher-grid" aria-label="Apps">
         {launcherModules.map((module) => {
           const available = canAccessModule(module, activeWorkspace)
@@ -45,16 +25,9 @@ export function DashboardPage() {
         })}
       </section>
 
-      {moduleRegistry.some((module) => canAccessModule(module, activeWorkspace) && module.dashboardReport) && (
-        <section className="launcher-summaries" aria-label="At a glance">
-          <h2>At a glance</h2>
-          <div className="dashboard-reports">
-            {moduleRegistry.filter((module) => canAccessModule(module, activeWorkspace) && module.dashboardReport).map((module) => (
-              <DashboardReport key={module.id} load={module.dashboardReport!} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="launcher-workspace" aria-label={`Active workspace: ${activeWorkspace.workspaceName}`}>
+        {activeWorkspace.workspaceName}
+      </div>
     </div>
   )
 }
