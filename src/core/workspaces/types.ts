@@ -5,7 +5,7 @@ export type WorkspaceContext = {
   workspaceName: string
   workspaceType: WorkspaceType
   roleName: string
+  workspaceDisplayName: string | null
   permissionKeys: string[]
   enabledModuleIds: string[]
 }
-

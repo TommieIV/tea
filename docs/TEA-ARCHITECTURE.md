@@ -30,7 +30,7 @@ Module Data / Actions
 ```
 
 ## Workspaces
-A user may have Personal, Household, and Business workspaces, and potentially multiple workspaces of the same type later. The active workspace determines shared data and relevant modules.
+A user may have Personal, Household, and Business workspaces, and potentially multiple workspaces of the same type later. The active workspace determines shared data and relevant modules. A membership may optionally define a workspace-specific display name that overrides the user's general profile display name only in that workspace.
 
 ## Pages / Routes
 One PWA can contain many routes such as `/login`, `/dashboard`, `/calendar`, `/tasks`, `/money`, `/vehicles`, `/projects`, and `/settings`.

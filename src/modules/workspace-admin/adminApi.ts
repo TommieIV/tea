@@ -6,7 +6,7 @@ function client() {
 }
 
 export type AdminMember = {
-  membership_id: string; user_id: string; display_name: string | null; email: string | null; role_id: string; role_name: string; status: 'active' | 'invited' | 'suspended'; permission_overrides: Record<string, 'allow' | 'deny'>; effective_permission_keys: string[]
+  membership_id: string; user_id: string; display_name: string | null; workspace_display_name: string | null; email: string | null; role_id: string; role_name: string; status: 'active' | 'invited' | 'suspended'; permission_overrides: Record<string, 'allow' | 'deny'>; effective_permission_keys: string[]
 }
 export type AdminRole = { role_id: string; role_name: string }
 export type AdminPermission = { permission_key: string; permission_description: string }

@@ -8,6 +8,7 @@ describe('mapWorkspaceContexts', () => {
       workspace_name: 'My Personal Workspace',
       workspace_type: 'personal',
       role_name: 'Owner',
+      workspace_display_name: 'Dad',
       permission_keys: ['example.overview.view'],
       enabled_module_ids: ['example'],
     }])).toEqual([{
@@ -15,6 +16,7 @@ describe('mapWorkspaceContexts', () => {
       workspaceName: 'My Personal Workspace',
       workspaceType: 'personal',
       roleName: 'Owner',
+      workspaceDisplayName: 'Dad',
       permissionKeys: ['example.overview.view'],
       enabledModuleIds: ['example'],
     }])
@@ -26,6 +28,7 @@ describe('mapWorkspaceContexts', () => {
       workspace_name: 'Workspace',
       workspace_type: 'personal',
       role_name: 'Owner',
+      workspace_display_name: null,
       permission_keys: null,
       enabled_module_ids: null,
     }])[0]).toMatchObject({ permissionKeys: [], enabledModuleIds: [] })

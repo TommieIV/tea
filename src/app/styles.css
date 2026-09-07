@@ -41,6 +41,11 @@ button { cursor: pointer; }
 .account-workspace-switcher select { min-height: 42px; width: 100%; border: 1px solid #eed9dc; border-radius: 12px; padding: 8px 30px 8px 11px; background: #fff; color: #211719; font-size: .9rem; font-weight: 700; letter-spacing: normal; text-transform: none; outline-color: var(--tea-red); }
 .account-menu-sign-out { min-height: 42px; border: 1px solid #f2dadd; border-radius: 12px; background: #fff8f8; color: var(--tea-red-dark); cursor: pointer; font-weight: 750; text-align: left; padding: 9px 11px; }
 .account-menu-sign-out:hover { background: var(--tea-red-soft); }
+.account-workspace-name { display: grid; gap: 7px; }
+.account-workspace-name label { display: grid; gap: 5px; color: #80696d; font-size: .72rem; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+.account-workspace-name input { min-height: 40px; border: 1px solid #eed9dc; border-radius: 12px; padding: 8px 10px; outline-color: var(--tea-red); }
+.account-workspace-name button { min-height: 38px; border: 1px solid #f2dadd; border-radius: 12px; background: #fff8f8; color: var(--tea-red-dark); cursor: pointer; font-weight: 750; }
+.account-workspace-name small { color: #b91c1c; font-size: .74rem; }
 .content { padding: 24px 0 64px; }
 .page-heading { margin-bottom: 28px; }
 .eyebrow { color: var(--tea-red); font-size: .78rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }

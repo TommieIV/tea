@@ -13,6 +13,7 @@ const personalWorkspace: WorkspaceContext = {
   workspaceName: 'Personal',
   workspaceType: 'personal',
   roleName: 'Owner',
+  workspaceDisplayName: null,
   permissionKeys: ['example.overview.view'],
   enabledModuleIds: ['example'],
 }

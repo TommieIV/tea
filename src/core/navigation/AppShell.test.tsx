@@ -17,6 +17,7 @@ const workspace: WorkspaceContext = {
   workspaceName: 'Personal',
   workspaceType: 'personal',
   roleName: 'Owner',
+  workspaceDisplayName: null,
   permissionKeys: [],
   enabledModuleIds: [],
 }
