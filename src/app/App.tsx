@@ -11,6 +11,7 @@ import { ModuleGuard } from '../core/modules/ModuleGuard'
 const ExampleModulePage = lazy(() => import('../modules/example/ExampleModulePage'))
 const TasksModulePage = lazy(() => import('../modules/tasks/TasksModulePage'))
 const TasksSettingsPage = lazy(() => import('../modules/tasks/TasksSettingsPage'))
+const WorkspaceAdministrationPage = lazy(() => import('../modules/workspace-admin/WorkspaceAdministrationPage'))
 
 function ModuleFallback() {
   return <div className="page-loading">Loading module…</div>
@@ -31,6 +32,16 @@ export function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route
+            path="/modules/administration"
+            element={
+              <ModuleGuard moduleId="workspace-admin">
+                <Suspense fallback={<ModuleFallback />}>
+                  <WorkspaceAdministrationPage />
+                </Suspense>
+              </ModuleGuard>
+            }
+          />
           <Route
             path="/modules/example"
             element={

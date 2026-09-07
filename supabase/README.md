@@ -33,3 +33,14 @@ TEA v0.1 uses Supabase Auth with email/password and PostgreSQL for its real work
 The bootstrap is an operator-only initial-environment action: it relies on the SQL Editor's administrative database access and is not callable by the browser. TEA currently has a login flow, not a signup/workspace-provisioning flow. Decide whether future normal signups should automatically receive a Personal workspace when that v0.2 feature is designed; do not use this bootstrap as automatic signup provisioning.
 
 Keep the Supabase service-role key out of the browser and out of source control. The publishable key is expected to be client-side; row-level security policies protect the data.
+## Workspace Administration
+
+Apply `migrations/20260907000000_workspace_administration.sql` after the existing migrations. It adds the Workspace Administration module, the Member role, secure per-member permission overrides, and Owner-only workspace/member/module management RPCs.
+
+To enable email invitations, deploy the Edge Function:
+
+```bash
+supabase functions deploy admin-invite
+```
+
+Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to hosted Edge Functions automatically. The service-role key must never be placed in the TEA frontend or Cloudflare variables. Ensure the deployed TEA URL is present in Supabase Auth's Redirect URLs so invitees can finish their invitation flow there.

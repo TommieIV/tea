@@ -1,4 +1,4 @@
-import { FlaskConical, ListTodo, type LucideIcon } from 'lucide-react'
+import { FlaskConical, ListTodo, Settings, type LucideIcon } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { WorkspaceType } from '../workspaces/types'
 
@@ -26,6 +26,18 @@ export type ModuleManifest = {
 }
 
 export const moduleRegistry: ModuleManifest[] = [
+  {
+    id: 'workspace-admin',
+    name: 'Administration',
+    version: '0.1.0',
+    route: '/modules/administration',
+    description: 'Manage workspaces, members, permissions, and enabled modules.',
+    icon: Settings,
+    status: 'connected',
+    classification: 'generic',
+    supportedWorkspaceTypes: ['personal', 'household', 'business'],
+    permissions: ['core.workspaces.create', 'core.workspaces.manage', 'core.members.manage', 'core.modules.manage'],
+  },
   {
     id: 'example',
     name: 'Example module',
