@@ -46,6 +46,11 @@ button { cursor: pointer; }
 .account-workspace-name input { min-height: 40px; border: 1px solid #eed9dc; border-radius: 12px; padding: 8px 10px; outline-color: var(--tea-red); }
 .account-workspace-name button { min-height: 38px; border: 1px solid #f2dadd; border-radius: 12px; background: #fff8f8; color: var(--tea-red-dark); cursor: pointer; font-weight: 750; }
 .account-workspace-name small { color: #b91c1c; font-size: .74rem; }
+.push-controls { display: grid; gap: 6px; border-top: 1px solid #f3e6e7; padding-top: 12px; color: #80696d; font-size: .72rem; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+.push-controls p { margin: 0; font-size: .76rem; font-weight: 500; letter-spacing: normal; text-transform: none; }
+.push-controls div { display: flex; gap: 8px; }
+.push-controls button { min-height: 38px; border: 1px solid #f2dadd; border-radius: 12px; padding: 8px 10px; background: #fff8f8; color: var(--tea-red-dark); cursor: pointer; font-weight: 750; }
+.push-controls small { color: #80696d; font-size: .72rem; font-weight: 500; letter-spacing: normal; text-transform: none; }
 .content { padding: 24px 0 64px; }
 .page-heading { margin-bottom: 28px; }
 .eyebrow { color: var(--tea-red); font-size: .78rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }

@@ -4,6 +4,7 @@ import { ChevronDown, UserRound } from 'lucide-react'
 import { useAuth } from '../auth/useAuth'
 import { useUserDisplayName } from '../auth/useUserDisplayName'
 import { DashboardDrawer } from '../dashboard/DashboardDrawer'
+import { PushNotificationControls } from '../pwa/PushNotificationControls'
 import { useOnlineStatus } from '../pwa/useOnlineStatus'
 import { useWorkspace } from '../workspaces/useWorkspace'
 import teaHeader from '../../../logos/tea_header.png'
@@ -54,6 +55,7 @@ export function AppShell() {
                 {activeWorkspace && (
                   <><label className="account-workspace-switcher"><span>Workspace</span><select value={activeWorkspace.workspaceId} onChange={(event) => setActiveWorkspaceId(event.target.value)} aria-label="Active workspace">{contexts.map((context) => <option key={context.workspaceId} value={context.workspaceId}>{context.workspaceName}</option>)}</select></label><form className="account-workspace-name" onSubmit={(event) => { event.preventDefault(); void saveWorkspaceDisplayName() }}><label><span>Name in {activeWorkspace.workspaceName}</span><input value={workspaceNameInput} onChange={(event) => setWorkspaceNameInput(event.target.value)} placeholder={displayName} maxLength={80} /></label><button type="submit">Save name</button>{workspaceNameError && <small role="alert">{workspaceNameError}</small>}</form></>
                 )}
+                <PushNotificationControls />
                 <button className="account-menu-sign-out" type="button" onClick={() => void signOut()}>Sign out</button>
               </div>
             </details>

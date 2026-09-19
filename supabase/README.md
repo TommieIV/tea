@@ -44,3 +44,18 @@ supabase functions deploy admin-invite
 ```
 
 Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to hosted Edge Functions automatically. The service-role key must never be placed in the TEA frontend or Cloudflare variables. Ensure the deployed TEA URL is present in Supabase Auth's Redirect URLs so invitees can finish their invitation flow there.
+
+## Push notifications
+
+Apply `migrations/20260916000000_push_notifications.sql`, then deploy the test sender:
+
+```bash
+supabase functions deploy send-push-test
+```
+
+Generate one VAPID key pair and configure it in both places:
+
+- Cloudflare Pages/Workers build variable: `VITE_VAPID_PUBLIC_KEY` = the public key.
+- Supabase Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (for example, `mailto:you@example.com`).
+
+Never put `VAPID_PRIVATE_KEY` in Cloudflare, the frontend, or source control. After redeploying TEA, enable notifications from the account menu and use **Send test** to verify the installed PWA receives a notification.
