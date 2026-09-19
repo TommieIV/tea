@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
-      filename: 'service-worker.ts',
+      filename: 'sw.ts',
       registerType: 'prompt',
       includeAssets: ['tea_fav.png'],
       manifest: {
