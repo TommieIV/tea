@@ -15,3 +15,7 @@ export function aggregateDashboardSignals(signals: DashboardSignal[]): Dashboard
     }
   ), { itemCount: 0, severity: 'none' })
 }
+
+export function highPriorityDashboardSignal(signals: DashboardSignal[]): DashboardSignal {
+  return aggregateDashboardSignals(signals.filter((signal) => signal.severity === 'high'))
+}

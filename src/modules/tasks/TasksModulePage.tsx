@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useWorkspace } from '../../core/workspaces/useWorkspace'
-import { archiveTask, createTask, loadCategories, loadTaskSettings, loadTasks, setTaskCompleted } from './tasksApi'
+import { archiveTask, createTask, deleteTask, loadCategories, loadTaskSettings, loadTasks, setTaskCompleted } from './tasksApi'
 import type { TaskCategory, TaskItem, TaskPriority, TaskSettings } from './types'
 
 const priorities: TaskPriority[] = ['low', 'medium', 'high']
@@ -23,6 +23,7 @@ export default function TasksModulePage() {
   const canCreate = activeWorkspace?.permissionKeys.includes('tasks.items.create') ?? false
   const canComplete = activeWorkspace?.permissionKeys.includes('tasks.items.complete') ?? false
   const canArchive = activeWorkspace?.permissionKeys.includes('tasks.items.archive') ?? false
+  const canDelete = activeWorkspace?.permissionKeys.includes('tasks.items.delete') ?? false
   const canManageSettings = activeWorkspace?.permissionKeys.includes('tasks.settings.manage') ?? false
   const [items, setItems] = useState<TaskItem[]>([])
   const [categories, setCategories] = useState<TaskCategory[]>([])
@@ -32,6 +33,7 @@ export default function TasksModulePage() {
   const [priority, setPriority] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
+  const [showArchived, setShowArchived] = useState(false)
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -40,7 +42,7 @@ export default function TasksModulePage() {
   async function refresh() {
     if (!activeWorkspace) return
     const [nextItems, nextCategories, nextSettings] = await Promise.all([
-      loadTasks(activeWorkspace.workspaceId),
+      loadTasks(activeWorkspace.workspaceId, showArchived),
       loadCategories(activeWorkspace.workspaceId),
       canCreate ? loadTaskSettings(activeWorkspace.workspaceId) : Promise.resolve(null),
     ])
@@ -55,7 +57,7 @@ export default function TasksModulePage() {
     void refresh().catch(() => setError('Tasks could not be loaded. Check that the Tasks migration has been applied and the module is enabled.')).finally(() => setLoading(false))
   // The active workspace and permission set determine every module query.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkspace?.workspaceId, canCreate])
+  }, [activeWorkspace?.workspaceId, canCreate, showArchived])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -100,6 +102,17 @@ export default function TasksModulePage() {
     }
   }
 
+  async function handleDelete(item: TaskItem) {
+    if (!activeWorkspace || !canDelete || !window.confirm(`Permanently delete “${item.title}”? This cannot be undone.`)) return
+    setError(null)
+    try {
+      await deleteTask(activeWorkspace.workspaceId, item.id)
+      await refresh()
+    } catch {
+      setError('The task could not be deleted. Please try again.')
+    }
+  }
+
   return (
     <>
       <section className="page-heading task-heading">
@@ -122,12 +135,13 @@ export default function TasksModulePage() {
       {error && <p className="notice error" role="alert">{error}</p>}
       {loading ? <div className="page-loading">Loading tasks…</div> : (
         <section className="task-list" aria-label="Tasks">
-          {items.length === 0 ? <div className="empty-state">No tasks yet. Add one to get started.</div> : items.map((item) => {
+          <div className="task-list-controls"><strong>{showArchived ? 'Archived tasks' : 'Active tasks'}</strong><button className="button button-secondary" type="button" onClick={() => setShowArchived((value) => !value)}>{showArchived ? 'View active' : 'View archived'}</button></div>
+          {items.length === 0 ? <div className="empty-state">{showArchived ? 'No archived tasks yet.' : 'No tasks yet. Add one to get started.'}</div> : items.map((item) => {
             const category = categories.find((candidate) => candidate.id === item.categoryId)
             return <article className={`task-item${item.completedAt ? ' completed' : ''}`} key={item.id}>
-              <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />
+              {!showArchived && <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />}
               <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>
-              {item.completedAt && canArchive && <button className="button button-quiet task-archive" type="button" onClick={() => void handleArchive(item)}>Archive</button>}
+              <div className="task-item-actions">{!showArchived && item.completedAt && canArchive && <button className="button button-quiet" type="button" onClick={() => void handleArchive(item)}>Archive</button>}{canDelete && <button className="button button-quiet task-delete" type="button" onClick={() => void handleDelete(item)}>Delete</button>}</div>
             </article>
           })}
         </section>

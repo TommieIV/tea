@@ -22,9 +22,10 @@ begin
     'tasks.items.create',
     'tasks.items.complete',
     'tasks.items.archive',
+    'tasks.items.delete',
     'tasks.settings.manage'
-  )) <> 5 then
-    raise exception 'The Tasks migrations have not been applied successfully. Run both Tasks migrations before enabling Tasks.';
+  )) <> 6 then
+    raise exception 'The Tasks migrations have not been applied successfully. Run all Tasks migrations before enabling Tasks.';
   end if;
 
   select id into owner_role_id
@@ -42,6 +43,7 @@ begin
     (owner_role_id, 'tasks.items.create'),
     (owner_role_id, 'tasks.items.complete'),
     (owner_role_id, 'tasks.items.archive'),
+    (owner_role_id, 'tasks.items.delete'),
     (owner_role_id, 'tasks.settings.manage')
   on conflict do nothing;
 

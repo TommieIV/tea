@@ -28,15 +28,18 @@ function mapTask(row: TaskRow): TaskItem {
   }
 }
 
-export async function loadTasks(workspaceId: string): Promise<TaskItem[]> {
+export async function loadTasks(workspaceId: string, archived = false): Promise<TaskItem[]> {
   const client = requireSupabase()
-  const { data, error } = await client
+  let query = client
     .from('task_items')
     .select('id, title, category_id, priority, due_date, due_at, completed_at')
     .eq('workspace_id', workspaceId)
-    .is('archived_at', null)
     .order('completed_at', { ascending: true, nullsFirst: true })
+    .order('due_date', { ascending: true, nullsFirst: false })
     .order('due_at', { ascending: true, nullsFirst: false })
+
+  query = archived ? query.not('archived_at', 'is', null) : query.is('archived_at', null)
+  const { data, error } = await query
 
   if (error) throw error
   return (data as TaskRow[]).map(mapTask)
@@ -99,6 +102,15 @@ export async function archiveTask(workspaceId: string, taskId: string) {
   if (error) throw error
 }
 
+export async function deleteTask(workspaceId: string, taskId: string) {
+  const client = requireSupabase()
+  const { error } = await client.rpc('tasks_delete_item', {
+    target_workspace_id: workspaceId,
+    target_item_id: taskId,
+  })
+  if (error) throw error
+}
+
 export async function createCategory(workspaceId: string, name: string) {
   const client = requireSupabase()
   const { error } = await client.from('task_categories').insert({ workspace_id: workspaceId, name: name.trim() })
@@ -138,8 +150,12 @@ export async function loadTasksDashboardReport(workspaceId: string): Promise<Tas
 
 export async function loadTasksDashboardSignal(workspaceId: string) {
   const report = await loadTasksDashboardReport(workspaceId)
+  return tasksDashboardSignal(report)
+}
+
+export function tasksDashboardSignal(report: TasksDashboardReport) {
   return {
-    itemCount: report.openCount,
-    severity: report.highPriorityCount > 0 ? 'high' as const : report.mediumPriorityCount > 0 ? 'medium' as const : report.openCount > 0 ? 'regular' as const : 'none' as const,
+    itemCount: report.highPriorityCount,
+    severity: report.highPriorityCount > 0 ? 'high' as const : 'none' as const,
   }
 }

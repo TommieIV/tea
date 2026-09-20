@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { canAccessModule } from '../modules/moduleAccess'
 import { moduleRegistry, type DashboardSignal } from '../modules/registry'
 import { useWorkspace } from '../workspaces/useWorkspace'
-import { aggregateDashboardSignals } from './dashboardSignals'
+import { highPriorityDashboardSignal } from './dashboardSignals'
 
 function DashboardReport({ load }: { load: NonNullable<(typeof moduleRegistry)[number]['dashboardReport']> }) {
   const Report = useMemo(() => lazy(load), [load])
@@ -31,7 +31,7 @@ export function DashboardDrawer() {
     const signalLoaders = availableModules.flatMap((module) => module.dashboardSignal ? [module.dashboardSignal] : [])
     void Promise.all(signalLoaders.map((load) => load(activeWorkspace.workspaceId).catch(() => ({ itemCount: 0, severity: 'none' as const }))))
       .then((signals) => {
-        if (!cancelled) setSignal(aggregateDashboardSignals(signals))
+        if (!cancelled) setSignal(highPriorityDashboardSignal(signals))
       })
 
     return () => {
