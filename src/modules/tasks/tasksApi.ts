@@ -9,6 +9,7 @@ type TaskRow = {
   due_date: string | null
   due_at: string | null
   completed_at: string | null
+  created_by: string
 }
 
 function requireSupabase() {
@@ -25,6 +26,7 @@ function mapTask(row: TaskRow): TaskItem {
     dueDate: row.due_date,
     dueAt: row.due_at,
     completedAt: row.completed_at,
+    createdBy: row.created_by,
   }
 }
 
@@ -32,7 +34,7 @@ export async function loadTasks(workspaceId: string, archived = false): Promise<
   const client = requireSupabase()
   let query = client
     .from('task_items')
-    .select('id, title, category_id, priority, due_date, due_at, completed_at')
+    .select('id, title, category_id, priority, due_date, due_at, completed_at, created_by')
     .eq('workspace_id', workspaceId)
     .order('completed_at', { ascending: true, nullsFirst: true })
     .order('due_date', { ascending: true, nullsFirst: false })
@@ -107,6 +109,20 @@ export async function deleteTask(workspaceId: string, taskId: string) {
   const { error } = await client.rpc('tasks_delete_item', {
     target_workspace_id: workspaceId,
     target_item_id: taskId,
+  })
+  if (error) throw error
+}
+
+export async function updateTask(workspaceId: string, taskId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null) {
+  const client = requireSupabase()
+  const { error } = await client.rpc('tasks_update_item', {
+    target_workspace_id: workspaceId,
+    target_item_id: taskId,
+    task_title: title,
+    selected_category_id: categoryId,
+    selected_priority: priority,
+    task_due_date: dueDate,
+    task_due_at: dueAt,
   })
   if (error) throw error
 }

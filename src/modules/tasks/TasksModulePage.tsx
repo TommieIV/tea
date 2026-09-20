@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
+import { useAuth } from '../../core/auth/useAuth'
 import { useWorkspace } from '../../core/workspaces/useWorkspace'
-import { archiveTask, createTask, deleteTask, loadCategories, loadTaskSettings, loadTasks, setTaskCompleted } from './tasksApi'
+import { archiveTask, createTask, deleteTask, loadCategories, loadTaskSettings, loadTasks, setTaskCompleted, updateTask } from './tasksApi'
 import type { TaskCategory, TaskItem, TaskPriority, TaskSettings } from './types'
 
 const priorities: TaskPriority[] = ['low', 'medium', 'high']
@@ -18,12 +19,21 @@ function formatDueTime(value: string | null) {
   return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(value))
 }
 
+function timeInputValue(value: string | null) {
+  if (!value) return ''
+  const date = new Date(value)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
 export default function TasksModulePage() {
+  const { session } = useAuth()
   const { activeWorkspace } = useWorkspace()
   const canCreate = activeWorkspace?.permissionKeys.includes('tasks.items.create') ?? false
   const canComplete = activeWorkspace?.permissionKeys.includes('tasks.items.complete') ?? false
   const canArchive = activeWorkspace?.permissionKeys.includes('tasks.items.archive') ?? false
   const canDelete = activeWorkspace?.permissionKeys.includes('tasks.items.delete') ?? false
+  const canEditOwn = activeWorkspace?.permissionKeys.includes('tasks.items.edit-own') ?? false
+  const canEditAny = activeWorkspace?.permissionKeys.includes('tasks.items.edit-any') ?? false
   const canManageSettings = activeWorkspace?.permissionKeys.includes('tasks.settings.manage') ?? false
   const [items, setItems] = useState<TaskItem[]>([])
   const [categories, setCategories] = useState<TaskCategory[]>([])
@@ -33,6 +43,12 @@ export default function TasksModulePage() {
   const [priority, setPriority] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
+  const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editCategoryId, setEditCategoryId] = useState('')
+  const [editPriority, setEditPriority] = useState('')
+  const [editDueDate, setEditDueDate] = useState('')
+  const [editDueTime, setEditDueTime] = useState('')
   const [showArchived, setShowArchived] = useState(false)
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -113,6 +129,32 @@ export default function TasksModulePage() {
     }
   }
 
+  function beginEdit(item: TaskItem) {
+    setEditingTask(item)
+    setEditTitle(item.title)
+    setEditCategoryId(item.categoryId ?? '')
+    setEditPriority(item.priority ?? '')
+    setEditDueDate(item.dueDate ?? '')
+    setEditDueTime(timeInputValue(item.dueAt))
+  }
+
+  async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!activeWorkspace || !editingTask) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const dueAt = editDueDate && editDueTime ? new Date(`${editDueDate}T${editDueTime}`).toISOString() : null
+      await updateTask(activeWorkspace.workspaceId, editingTask.id, editTitle, editCategoryId || null, (editPriority || null) as TaskPriority | null, editDueDate || null, dueAt)
+      setEditingTask(null)
+      await refresh()
+    } catch {
+      setError('The task could not be updated. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <>
       <section className="page-heading task-heading">
@@ -138,10 +180,19 @@ export default function TasksModulePage() {
           <div className="task-list-controls"><strong>{showArchived ? 'Archived tasks' : 'Active tasks'}</strong><button className="button button-secondary" type="button" onClick={() => setShowArchived((value) => !value)}>{showArchived ? 'View active' : 'View archived'}</button></div>
           {items.length === 0 ? <div className="empty-state">{showArchived ? 'No archived tasks yet.' : 'No tasks yet. Add one to get started.'}</div> : items.map((item) => {
             const category = categories.find((candidate) => candidate.id === item.categoryId)
+            const canEdit = canEditAny || (canEditOwn && item.createdBy === session?.user.id)
             return <article className={`task-item${item.completedAt ? ' completed' : ''}`} key={item.id}>
               {!showArchived && <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />}
-              <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>
+              {canEdit ? <button className="task-item-copy task-edit-trigger" type="button" onClick={() => beginEdit(item)} aria-label={`Edit ${item.title}`}><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></button> : <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>}
               <div className="task-item-actions">{!showArchived && item.completedAt && canArchive && <button className="button button-quiet" type="button" onClick={() => void handleArchive(item)}>Archive</button>}{canDelete && <button className="button button-quiet task-delete" type="button" onClick={() => void handleDelete(item)}>Delete</button>}</div>
+              {editingTask?.id === item.id && <form className="task-edit-form" onSubmit={handleEditSubmit}>
+                <label className="field task-title-field">Task<input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} maxLength={500} required /></label>
+                <label className="field">Category<select value={editCategoryId} onChange={(event) => setEditCategoryId(event.target.value)}><option value="">No category</option>{categories.map((taskCategory) => <option key={taskCategory.id} value={taskCategory.id}>{taskCategory.name}</option>)}</select></label>
+                <label className="field">Priority<select value={editPriority} onChange={(event) => setEditPriority(event.target.value)}><option value="">No priority</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
+                <label className="field">Due date<input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} /></label>
+                <label className="field">Due time<input type="time" value={editDueTime} disabled={!editDueDate} onChange={(event) => setEditDueTime(event.target.value)} /></label>
+                <div className="task-edit-actions"><button className="button button-secondary" type="button" onClick={() => setEditingTask(null)}>Cancel</button><button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save task'}</button></div>
+              </form>}
             </article>
           })}
         </section>

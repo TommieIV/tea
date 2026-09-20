@@ -6,6 +6,7 @@ Tasks is TEA's first real, reusable module. It supports Personal, Household, and
 
 - Create a task with an optional category, priority, due date, and due time.
 - Complete or reopen a task, then archive a completed task without deleting it. Archived tasks remain available in the archived view; members with `tasks.items.delete` can permanently delete a task after a confirmation.
+- Edit a task by tapping it. Members with `tasks.items.edit-own` can edit tasks they created; `tasks.items.edit-any` permits editing every task in the workspace.
 - Manage workspace-scoped categories and default category/priority settings.
 - Report open, high-priority, medium-priority, and overdue task counts to the Dashboard. Only high-priority open tasks contribute to the shared Dashboard badge and attention glow.
 
@@ -20,6 +21,8 @@ Creating a task queues one notification for its creator. If a due time is set, i
 - `tasks.items.complete`
 - `tasks.items.archive`
 - `tasks.items.delete`
+- `tasks.items.edit-own`
+- `tasks.items.edit-any`
 - `tasks.settings.manage`
 
 ## Hosted setup

@@ -14,6 +14,7 @@ export type TaskItem = {
   dueDate: string | null
   dueAt: string | null
   completedAt: string | null
+  createdBy: string
 }
 
 export type TaskSettings = {
