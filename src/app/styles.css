@@ -140,8 +140,10 @@ h1 { margin: 6px 0 8px; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.055
 .task-edit-trigger:focus-visible { border-radius: 8px; outline: 3px solid color-mix(in srgb, var(--tea-red) 25%, transparent); outline-offset: 3px; }
 .task-item-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; margin-left: auto; }
 .task-delete { color: #b91c1c; }
-.task-edit-form { display: grid; flex-basis: 100%; grid-template-columns: minmax(200px, 2fr) repeat(4, minmax(130px, 1fr)) auto; width: 100%; align-items: end; gap: 12px; margin-top: 2px; border-top: 1px solid #f3e6e7; padding-top: 14px; }
-.task-edit-form .field { margin: 0; }
+.task-edit-panel { margin: 0 0 24px; }
+.task-edit-heading { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; color: #62484d; }
+.task-edit-heading span { color: #80696d; font-size: .82rem; }
+.task-edit-panel .task-form { margin-bottom: 0; }
 .task-edit-actions { display: flex; gap: 8px; }
 .task-edit-actions .button { width: auto; margin: 0; white-space: nowrap; }
 .task-item h2 { margin: 0; font-size: 1rem; }

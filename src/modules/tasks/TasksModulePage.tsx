@@ -130,6 +130,7 @@ export default function TasksModulePage() {
   }
 
   function beginEdit(item: TaskItem) {
+    setIsComposerOpen(false)
     setEditingTask(item)
     setEditTitle(item.title)
     setEditCategoryId(item.categoryId ?? '')
@@ -174,6 +175,18 @@ export default function TasksModulePage() {
         </form>}
       </>}
 
+      {editingTask && <section className="task-edit-panel" aria-label={`Editing ${editingTask.title}`}>
+        <div className="task-edit-heading"><strong>Editing task</strong><span>Update the task details, then save.</span></div>
+        <form className="task-form task-edit-form" onSubmit={handleEditSubmit}>
+          <label className="field task-title-field">Task<input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} maxLength={500} required /></label>
+          <label className="field">Category<select value={editCategoryId} onChange={(event) => setEditCategoryId(event.target.value)}><option value="">No category</option>{categories.map((taskCategory) => <option key={taskCategory.id} value={taskCategory.id}>{taskCategory.name}</option>)}</select></label>
+          <label className="field">Priority<select value={editPriority} onChange={(event) => setEditPriority(event.target.value)}><option value="">No priority</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
+          <label className="field">Due date<input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} /></label>
+          <label className="field">Due time<input type="time" value={editDueTime} disabled={!editDueDate} onChange={(event) => setEditDueTime(event.target.value)} /></label>
+          <div className="task-edit-actions"><button className="button button-secondary" type="button" onClick={() => setEditingTask(null)}>Cancel</button><button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save task'}</button></div>
+        </form>
+      </section>}
+
       {error && <p className="notice error" role="alert">{error}</p>}
       {loading ? <div className="page-loading">Loading tasks…</div> : (
         <section className="task-list" aria-label="Tasks">
@@ -185,14 +198,6 @@ export default function TasksModulePage() {
               {!showArchived && <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />}
               {canEdit ? <button className="task-item-copy task-edit-trigger" type="button" onClick={() => beginEdit(item)} aria-label={`Edit ${item.title}`}><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></button> : <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>}
               <div className="task-item-actions">{!showArchived && item.completedAt && canArchive && <button className="button button-quiet" type="button" onClick={() => void handleArchive(item)}>Archive</button>}{canDelete && <button className="button button-quiet task-delete" type="button" onClick={() => void handleDelete(item)}>Delete</button>}</div>
-              {editingTask?.id === item.id && <form className="task-edit-form" onSubmit={handleEditSubmit}>
-                <label className="field task-title-field">Task<input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} maxLength={500} required /></label>
-                <label className="field">Category<select value={editCategoryId} onChange={(event) => setEditCategoryId(event.target.value)}><option value="">No category</option>{categories.map((taskCategory) => <option key={taskCategory.id} value={taskCategory.id}>{taskCategory.name}</option>)}</select></label>
-                <label className="field">Priority<select value={editPriority} onChange={(event) => setEditPriority(event.target.value)}><option value="">No priority</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
-                <label className="field">Due date<input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} /></label>
-                <label className="field">Due time<input type="time" value={editDueTime} disabled={!editDueDate} onChange={(event) => setEditDueTime(event.target.value)} /></label>
-                <div className="task-edit-actions"><button className="button button-secondary" type="button" onClick={() => setEditingTask(null)}>Cancel</button><button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save task'}</button></div>
-              </form>}
             </article>
           })}
         </section>
