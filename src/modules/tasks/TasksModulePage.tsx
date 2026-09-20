@@ -13,6 +13,11 @@ function formatDueDate(value: string | null) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(new Date(`${value}T00:00:00`))
 }
 
+function formatDueTime(value: string | null) {
+  if (!value) return null
+  return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(value))
+}
+
 export default function TasksModulePage() {
   const { activeWorkspace } = useWorkspace()
   const canCreate = activeWorkspace?.permissionKeys.includes('tasks.items.create') ?? false
@@ -26,6 +31,7 @@ export default function TasksModulePage() {
   const [categoryId, setCategoryId] = useState('')
   const [priority, setPriority] = useState('')
   const [dueDate, setDueDate] = useState('')
+  const [dueTime, setDueTime] = useState('')
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -57,11 +63,13 @@ export default function TasksModulePage() {
     setSubmitting(true)
     setError(null)
     try {
-      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null)
+      const dueAt = dueDate && dueTime ? new Date(`${dueDate}T${dueTime}`).toISOString() : null
+      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null, dueAt)
       setTitle('')
       setCategoryId('')
       setPriority('')
       setDueDate('')
+      setDueTime('')
       await refresh()
     } catch {
       setError('The task could not be saved. Please try again.')
@@ -106,6 +114,7 @@ export default function TasksModulePage() {
         <label className="field">Category<select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}><option value="">Use default{settings?.defaultCategoryId ? ` (${categories.find((category) => category.id === settings.defaultCategoryId)?.name ?? 'none'})` : ''}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
         <label className="field">Priority<select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Use default{settings?.defaultPriority ? ` (${settings.defaultPriority})` : ''}</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
         <label className="field">Due date<input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
+        <label className="field">Due time<input type="time" value={dueTime} disabled={!dueDate} onChange={(event) => setDueTime(event.target.value)} /></label>
         <button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Adding…' : 'Add task'}</button>
         </form>}
       </>}
@@ -117,7 +126,7 @@ export default function TasksModulePage() {
             const category = categories.find((candidate) => candidate.id === item.categoryId)
             return <article className={`task-item${item.completedAt ? ' completed' : ''}`} key={item.id}>
               <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />
-              <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}</span>}</div></div>
+              <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>
               {item.completedAt && canArchive && <button className="button button-quiet task-archive" type="button" onClick={() => void handleArchive(item)}>Archive</button>}
             </article>
           })}

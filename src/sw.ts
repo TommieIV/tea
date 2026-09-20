@@ -20,7 +20,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(payload?.title ?? 'TEA', {
     body: payload?.body ?? 'You have a new TEA notification.',
     icon: '/tea_fav.png',
-    badge: '/tea_fav.png',
+    badge: '/tea-notification-badge.svg',
     tag: payload?.tag,
     data: { url: payload?.url ?? '/dashboard' },
   }))

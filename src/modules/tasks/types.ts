@@ -12,6 +12,7 @@ export type TaskItem = {
   categoryId: string | null
   priority: TaskPriority | null
   dueDate: string | null
+  dueAt: string | null
   completedAt: string | null
 }
 

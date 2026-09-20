@@ -7,6 +7,7 @@ type TaskRow = {
   category_id: string | null
   priority: TaskPriority | null
   due_date: string | null
+  due_at: string | null
   completed_at: string | null
 }
 
@@ -22,6 +23,7 @@ function mapTask(row: TaskRow): TaskItem {
     categoryId: row.category_id,
     priority: row.priority,
     dueDate: row.due_date,
+    dueAt: row.due_at,
     completedAt: row.completed_at,
   }
 }
@@ -30,11 +32,11 @@ export async function loadTasks(workspaceId: string): Promise<TaskItem[]> {
   const client = requireSupabase()
   const { data, error } = await client
     .from('task_items')
-    .select('id, title, category_id, priority, due_date, completed_at')
+    .select('id, title, category_id, priority, due_date, due_at, completed_at')
     .eq('workspace_id', workspaceId)
     .is('archived_at', null)
     .order('completed_at', { ascending: true, nullsFirst: true })
-    .order('due_date', { ascending: true, nullsFirst: false })
+    .order('due_at', { ascending: true, nullsFirst: false })
 
   if (error) throw error
   return (data as TaskRow[]).map(mapTask)
@@ -65,7 +67,7 @@ export async function loadTaskSettings(workspaceId: string): Promise<TaskSetting
   return { defaultCategoryId: data.default_category_id, defaultPriority: data.default_priority }
 }
 
-export async function createTask(workspaceId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null) {
+export async function createTask(workspaceId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null) {
   const client = requireSupabase()
   const { error } = await client.rpc('tasks_create_item', {
     target_workspace_id: workspaceId,
@@ -73,6 +75,7 @@ export async function createTask(workspaceId: string, title: string, categoryId:
     selected_category_id: categoryId,
     selected_priority: priority,
     task_due_date: dueDate,
+    task_due_at: dueAt,
   })
   if (error) throw error
 }

@@ -59,3 +59,39 @@ Generate one VAPID key pair and configure it in both places:
 - Supabase Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (for example, `mailto:you@example.com`).
 
 Never put `VAPID_PRIVATE_KEY` in Cloudflare, the frontend, or source control. After redeploying TEA, enable notifications from the account menu and use **Send test** to verify the installed PWA receives a notification.
+
+### Task creation and due notifications
+
+Apply `migrations/20260919000000_tasks_due_time_notifications.sql` after the Tasks and push migrations, then deploy the dispatcher:
+
+```bash
+supabase functions deploy task-push-dispatcher --no-verify-jwt
+supabase secrets set TASK_PUSH_CRON_SECRET="generate-a-long-random-value"
+```
+
+In the Supabase SQL Editor, replace all three values below, run it once, and keep the cron secret private. This creates a one-minute scheduled job; task notifications are normally delivered within a minute of creation or their due time.
+
+```sql
+select vault.create_secret('https://YOUR_PROJECT_REF.supabase.co', 'tea_project_url');
+select vault.create_secret('YOUR_PUBLISHABLE_KEY', 'tea_publishable_key');
+select vault.create_secret('THE_SAME_LONG_RANDOM_VALUE', 'tea_task_push_cron_secret');
+
+select cron.schedule(
+  'tea-dispatch-task-push-notifications',
+  '* * * * *',
+  $$
+    select net.http_post(
+      url := (select decrypted_secret from vault.decrypted_secrets where name = 'tea_project_url') || '/functions/v1/task-push-dispatcher',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'apikey', (select decrypted_secret from vault.decrypted_secrets where name = 'tea_publishable_key'),
+        'x-tea-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'tea_task_push_cron_secret')
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 5000
+    );
+  $$
+);
+```
+
+Enable the `pg_net`, `pg_cron`, and `Supabase Vault` extensions first if the SQL Editor reports that one is unavailable. The scheduled function sends no due notification for a task completed or archived before it becomes due. The notification badge uses a transparent, monochrome TEA mark so Android can render a proper status-bar icon instead of a solid square.
