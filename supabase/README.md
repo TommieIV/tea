@@ -95,3 +95,9 @@ select cron.schedule(
 ```
 
 Enable the `pg_net`, `pg_cron`, and `Supabase Vault` extensions first if the SQL Editor reports that one is unavailable. The scheduled function sends no due notification for a task completed or archived before it becomes due. The notification badge uses a transparent, monochrome TEA mark so Android can render a proper status-bar icon instead of a solid square.
+
+When applying `migrations/20260920020000_workspace_groups_and_task_notification_targets.sql`, redeploy the dispatcher so task notifications can resolve Everyone, individual members, and workspace groups:
+
+```bash
+supabase functions deploy task-push-dispatcher --no-verify-jwt
+```

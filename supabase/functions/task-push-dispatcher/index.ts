@@ -4,9 +4,35 @@ import webpush from 'npm:web-push@3.6.7'
 type PendingNotification = {
   id: string
   task_id: string
-  user_id: string
+  user_id: string | null
   kind: 'created' | 'due'
-  task_items: { title: string; completed_at: string | null; archived_at: string | null } | null
+  task_items: { title: string; workspace_id: string; completed_at: string | null; archived_at: string | null } | null
+}
+
+async function recipientUserIds(admin: ReturnType<typeof createClient>, item: PendingNotification) {
+  const { data: target, error: targetError } = await admin.from('task_notification_targets').select('target_type, membership_id, group_id').eq('task_id', item.task_id).maybeSingle()
+  if (targetError) throw targetError
+  if (!target) return item.user_id ? [item.user_id] : []
+
+  if (target.target_type === 'everyone') {
+    const { data, error } = await admin.from('memberships').select('user_id').eq('workspace_id', item.task_items?.workspace_id ?? '').eq('status', 'active')
+    if (error) throw error
+    return [...new Set((data ?? []).map((membership) => membership.user_id))]
+  }
+
+  if (target.target_type === 'member') {
+    const { data, error } = await admin.from('memberships').select('user_id').eq('id', target.membership_id).eq('status', 'active').maybeSingle()
+    if (error) throw error
+    return data ? [data.user_id] : []
+  }
+
+  const { data: groupMembers, error: groupMembersError } = await admin.from('workspace_group_members').select('membership_id').eq('group_id', target.group_id)
+  if (groupMembersError) throw groupMembersError
+  const membershipIds = (groupMembers ?? []).map((member) => member.membership_id)
+  if (membershipIds.length === 0) return []
+  const { data: members, error: membersError } = await admin.from('memberships').select('user_id').in('id', membershipIds).eq('status', 'active')
+  if (membersError) throw membersError
+  return [...new Set((members ?? []).map((membership) => membership.user_id))]
 }
 
 function requireSecret(request: Request) {
@@ -16,7 +42,7 @@ function requireSecret(request: Request) {
 
 function notificationFor(item: PendingNotification) {
   const title = item.kind === 'due' ? 'Task due' : 'Task created'
-  const body = item.kind === 'due' ? `"${item.task_items?.title ?? 'A task'}" is due now.` : `"${item.task_items?.title ?? 'A task'}" was added to your tasks.`
+  const body = item.kind === 'due' ? `"${item.task_items?.title ?? 'A task'}" is due now.` : `"${item.task_items?.title ?? 'A task'}" was added to this workspace.`
   return JSON.stringify({ title, body, url: '/modules/tasks', tag: `tea-task-${item.task_id}-${item.kind}` })
 }
 
@@ -34,7 +60,7 @@ Deno.serve(async (request) => {
     const admin = createClient(url, serviceRoleKey)
     const { data, error } = await admin
       .from('task_push_notifications')
-      .select('id, task_id, user_id, kind, task_items!inner(title, completed_at, archived_at)')
+      .select('id, task_id, user_id, kind, task_items!inner(title, workspace_id, completed_at, archived_at)')
       .is('sent_at', null)
       .lte('scheduled_for', new Date().toISOString())
       .limit(100)
@@ -49,10 +75,10 @@ Deno.serve(async (request) => {
         continue
       }
 
-      const { data: subscriptions, error: subscriptionsError } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', item.user_id)
-      if (subscriptionsError) throw subscriptionsError
-
       try {
+        const userIds = await recipientUserIds(admin, item)
+        const { data: subscriptions, error: subscriptionsError } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').in('user_id', userIds)
+        if (subscriptionsError) throw subscriptionsError
         await Promise.all((subscriptions ?? []).map(async (subscription) => {
           try {
             await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, notificationFor(item))

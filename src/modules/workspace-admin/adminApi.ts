@@ -10,16 +10,18 @@ export type AdminMember = {
 }
 export type AdminRole = { role_id: string; role_name: string }
 export type AdminPermission = { permission_key: string; permission_description: string }
+export type AdminGroup = { group_id: string; group_name: string; membership_ids: string[] }
 
 export async function loadAdministration(workspaceId: string) {
   const api = client()
-  const [members, roles, permissions] = await Promise.all([
+  const [members, roles, permissions, groups] = await Promise.all([
     api.rpc('admin_list_workspace_members', { target_workspace_id: workspaceId }),
     api.rpc('admin_list_workspace_roles', { target_workspace_id: workspaceId }),
     api.rpc('admin_list_workspace_permissions', { target_workspace_id: workspaceId }),
+    api.rpc('admin_list_workspace_groups', { target_workspace_id: workspaceId }),
   ])
-  if (members.error || roles.error || permissions.error) throw members.error ?? roles.error ?? permissions.error
-  return { members: (members.data ?? []) as AdminMember[], roles: (roles.data ?? []) as AdminRole[], permissions: (permissions.data ?? []) as AdminPermission[] }
+  if (members.error || roles.error || permissions.error || groups.error) throw members.error ?? roles.error ?? permissions.error ?? groups.error
+  return { members: (members.data ?? []) as AdminMember[], roles: (roles.data ?? []) as AdminRole[], permissions: (permissions.data ?? []) as AdminPermission[], groups: (groups.data ?? []) as AdminGroup[] }
 }
 
 export async function updateWorkspace(workspaceId: string, name: string, type: string) {
@@ -44,5 +46,13 @@ export async function setModuleEnabled(workspaceId: string, moduleId: string, en
 }
 export async function inviteMember(workspaceId: string, email: string, displayName: string) {
   const { error } = await client().functions.invoke('admin-invite', { body: { workspaceId, email, displayName } })
+  if (error) throw error
+}
+export async function createWorkspaceGroup(workspaceId: string, name: string, membershipIds: string[]) {
+  const { error } = await client().rpc('admin_create_workspace_group', { target_workspace_id: workspaceId, new_group_name: name, member_ids: membershipIds })
+  if (error) throw error
+}
+export async function updateWorkspaceGroup(workspaceId: string, groupId: string, name: string, membershipIds: string[]) {
+  const { error } = await client().rpc('admin_update_workspace_group', { target_workspace_id: workspaceId, target_group_id: groupId, new_group_name: name, member_ids: membershipIds })
   if (error) throw error
 }

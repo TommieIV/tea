@@ -15,6 +15,19 @@ export type TaskItem = {
   dueAt: string | null
   completedAt: string | null
   createdBy: string
+  notificationTarget: TaskNotificationTarget | null
+}
+
+export type TaskNotificationTarget = {
+  type: 'everyone' | 'member' | 'group'
+  membershipId: string | null
+  groupId: string | null
+}
+
+export type TaskNotificationTargetOption = {
+  type: 'member' | 'group'
+  id: string
+  label: string
 }
 
 export type TaskSettings = {

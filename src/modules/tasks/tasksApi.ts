@@ -1,5 +1,5 @@
 import { supabase } from '../../core/auth/supabase'
-import type { TaskCategory, TaskItem, TaskPriority, TaskSettings, TasksDashboardReport } from './types'
+import type { TaskCategory, TaskItem, TaskNotificationTarget, TaskNotificationTargetOption, TaskPriority, TaskSettings, TasksDashboardReport } from './types'
 
 type TaskRow = {
   id: string
@@ -10,6 +10,7 @@ type TaskRow = {
   due_at: string | null
   completed_at: string | null
   created_by: string
+  task_notification_targets: { target_type: TaskNotificationTarget['type']; membership_id: string | null; group_id: string | null }[]
 }
 
 function requireSupabase() {
@@ -27,6 +28,7 @@ function mapTask(row: TaskRow): TaskItem {
     dueAt: row.due_at,
     completedAt: row.completed_at,
     createdBy: row.created_by,
+    notificationTarget: row.task_notification_targets[0] ? { type: row.task_notification_targets[0].target_type, membershipId: row.task_notification_targets[0].membership_id, groupId: row.task_notification_targets[0].group_id } : null,
   }
 }
 
@@ -34,7 +36,7 @@ export async function loadTasks(workspaceId: string, archived = false): Promise<
   const client = requireSupabase()
   let query = client
     .from('task_items')
-    .select('id, title, category_id, priority, due_date, due_at, completed_at, created_by')
+    .select('id, title, category_id, priority, due_date, due_at, completed_at, created_by, task_notification_targets(target_type, membership_id, group_id)')
     .eq('workspace_id', workspaceId)
     .order('completed_at', { ascending: true, nullsFirst: true })
     .order('due_date', { ascending: true, nullsFirst: false })
@@ -72,7 +74,7 @@ export async function loadTaskSettings(workspaceId: string): Promise<TaskSetting
   return { defaultCategoryId: data.default_category_id, defaultPriority: data.default_priority }
 }
 
-export async function createTask(workspaceId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null) {
+export async function createTask(workspaceId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null, notificationTarget: TaskNotificationTarget | null) {
   const client = requireSupabase()
   const { error } = await client.rpc('tasks_create_item', {
     target_workspace_id: workspaceId,
@@ -81,6 +83,9 @@ export async function createTask(workspaceId: string, title: string, categoryId:
     selected_priority: priority,
     task_due_date: dueDate,
     task_due_at: dueAt,
+    notification_target_type: notificationTarget?.type ?? null,
+    notification_membership_id: notificationTarget?.membershipId ?? null,
+    notification_group_id: notificationTarget?.groupId ?? null,
   })
   if (error) throw error
 }
@@ -113,7 +118,7 @@ export async function deleteTask(workspaceId: string, taskId: string) {
   if (error) throw error
 }
 
-export async function updateTask(workspaceId: string, taskId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null) {
+export async function updateTask(workspaceId: string, taskId: string, title: string, categoryId: string | null, priority: TaskPriority | null, dueDate: string | null, dueAt: string | null, notificationTarget: TaskNotificationTarget | null) {
   const client = requireSupabase()
   const { error } = await client.rpc('tasks_update_item', {
     target_workspace_id: workspaceId,
@@ -123,8 +128,18 @@ export async function updateTask(workspaceId: string, taskId: string, title: str
     selected_priority: priority,
     task_due_date: dueDate,
     task_due_at: dueAt,
+    notification_target_type: notificationTarget?.type ?? null,
+    notification_membership_id: notificationTarget?.membershipId ?? null,
+    notification_group_id: notificationTarget?.groupId ?? null,
   })
   if (error) throw error
+}
+
+export async function loadTaskNotificationTargetOptions(workspaceId: string): Promise<TaskNotificationTargetOption[]> {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('tasks_list_notification_targets', { target_workspace_id: workspaceId })
+  if (error) throw error
+  return (data ?? []).map((target: { target_type: string; target_id: string; label: string }) => ({ type: target.target_type as TaskNotificationTargetOption['type'], id: target.target_id, label: target.label }))
 }
 
 export async function createCategory(workspaceId: string, name: string) {

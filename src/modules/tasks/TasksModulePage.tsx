@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../core/auth/useAuth'
 import { useWorkspace } from '../../core/workspaces/useWorkspace'
-import { archiveTask, createTask, deleteTask, loadCategories, loadTaskSettings, loadTasks, setTaskCompleted, updateTask } from './tasksApi'
-import type { TaskCategory, TaskItem, TaskPriority, TaskSettings } from './types'
+import { archiveTask, createTask, deleteTask, loadCategories, loadTaskNotificationTargetOptions, loadTaskSettings, loadTasks, setTaskCompleted, updateTask } from './tasksApi'
+import type { TaskCategory, TaskItem, TaskNotificationTarget, TaskNotificationTargetOption, TaskPriority, TaskSettings } from './types'
 
 const priorities: TaskPriority[] = ['low', 'medium', 'high']
 
@@ -25,6 +25,25 @@ function timeInputValue(value: string | null) {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
+function notificationTargetFromValue(value: string): TaskNotificationTarget | null {
+  if (!value) return null
+  if (value === 'everyone') return { type: 'everyone', membershipId: null, groupId: null }
+  const [type, id] = value.split(':') as ['member' | 'group', string]
+  return type === 'member' ? { type, membershipId: id, groupId: null } : { type, membershipId: null, groupId: id }
+}
+
+function notificationTargetSelectValue(target: TaskNotificationTarget | null) {
+  if (!target) return ''
+  if (target.type === 'everyone') return 'everyone'
+  return `${target.type}:${target.type === 'member' ? target.membershipId : target.groupId}`
+}
+
+function NotificationTargetField({ value, options, onChange, defaultLabel }: { value: string; options: TaskNotificationTargetOption[]; onChange: (value: string) => void; defaultLabel: string }) {
+  const members = options.filter((option) => option.type === 'member')
+  const groups = options.filter((option) => option.type === 'group')
+  return <label className="field">Notify<select value={value} onChange={(event) => onChange(event.target.value)}><option value="">{defaultLabel}</option><option value="everyone">Everyone</option>{members.length > 0 && <optgroup label="Members">{members.map((member) => <option key={`member-${member.id}`} value={`member:${member.id}`}>{member.label}</option>)}</optgroup>}{groups.length > 0 && <optgroup label="Groups">{groups.map((group) => <option key={`group-${group.id}`} value={`group:${group.id}`}>{group.label}</option>)}</optgroup>}</select></label>
+}
+
 export default function TasksModulePage() {
   const { session } = useAuth()
   const { activeWorkspace } = useWorkspace()
@@ -32,6 +51,7 @@ export default function TasksModulePage() {
   const canComplete = activeWorkspace?.permissionKeys.includes('tasks.items.complete') ?? false
   const canArchive = activeWorkspace?.permissionKeys.includes('tasks.items.archive') ?? false
   const canDelete = activeWorkspace?.permissionKeys.includes('tasks.items.delete') ?? false
+  const canAssign = activeWorkspace?.permissionKeys.includes('tasks.items.assign') ?? false
   const canEditOwn = activeWorkspace?.permissionKeys.includes('tasks.items.edit-own') ?? false
   const canEditAny = activeWorkspace?.permissionKeys.includes('tasks.items.edit-any') ?? false
   const canManageSettings = activeWorkspace?.permissionKeys.includes('tasks.settings.manage') ?? false
@@ -43,12 +63,15 @@ export default function TasksModulePage() {
   const [priority, setPriority] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
+  const [notificationTargetValue, setNotificationTargetValue] = useState('')
+  const [notificationTargets, setNotificationTargets] = useState<TaskNotificationTargetOption[]>([])
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCategoryId, setEditCategoryId] = useState('')
   const [editPriority, setEditPriority] = useState('')
   const [editDueDate, setEditDueDate] = useState('')
   const [editDueTime, setEditDueTime] = useState('')
+  const [editNotificationTargetValue, setEditNotificationTargetValue] = useState('')
   const [showArchived, setShowArchived] = useState(false)
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -57,14 +80,16 @@ export default function TasksModulePage() {
 
   async function refresh() {
     if (!activeWorkspace) return
-    const [nextItems, nextCategories, nextSettings] = await Promise.all([
+    const [nextItems, nextCategories, nextSettings, nextNotificationTargets] = await Promise.all([
       loadTasks(activeWorkspace.workspaceId, showArchived),
       loadCategories(activeWorkspace.workspaceId),
       canCreate ? loadTaskSettings(activeWorkspace.workspaceId) : Promise.resolve(null),
+      canAssign ? loadTaskNotificationTargetOptions(activeWorkspace.workspaceId) : Promise.resolve([]),
     ])
     setItems(nextItems)
     setCategories(nextCategories.filter((category) => !category.archived))
     setSettings(nextSettings)
+    setNotificationTargets(nextNotificationTargets)
   }
 
   useEffect(() => {
@@ -73,7 +98,7 @@ export default function TasksModulePage() {
     void refresh().catch(() => setError('Tasks could not be loaded. Check that the Tasks migration has been applied and the module is enabled.')).finally(() => setLoading(false))
   // The active workspace and permission set determine every module query.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWorkspace?.workspaceId, canCreate, showArchived])
+  }, [activeWorkspace?.workspaceId, canCreate, canAssign, showArchived])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -82,12 +107,13 @@ export default function TasksModulePage() {
     setError(null)
     try {
       const dueAt = dueDate && dueTime ? new Date(`${dueDate}T${dueTime}`).toISOString() : null
-      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null, dueAt)
+      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null, dueAt, canAssign ? notificationTargetFromValue(notificationTargetValue) : null)
       setTitle('')
       setCategoryId('')
       setPriority('')
       setDueDate('')
       setDueTime('')
+      setNotificationTargetValue('')
       await refresh()
     } catch {
       setError('The task could not be saved. Please try again.')
@@ -137,6 +163,7 @@ export default function TasksModulePage() {
     setEditPriority(item.priority ?? '')
     setEditDueDate(item.dueDate ?? '')
     setEditDueTime(timeInputValue(item.dueAt))
+    setEditNotificationTargetValue(notificationTargetSelectValue(item.notificationTarget))
   }
 
   async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
@@ -146,7 +173,7 @@ export default function TasksModulePage() {
     setError(null)
     try {
       const dueAt = editDueDate && editDueTime ? new Date(`${editDueDate}T${editDueTime}`).toISOString() : null
-      await updateTask(activeWorkspace.workspaceId, editingTask.id, editTitle, editCategoryId || null, (editPriority || null) as TaskPriority | null, editDueDate || null, dueAt)
+      await updateTask(activeWorkspace.workspaceId, editingTask.id, editTitle, editCategoryId || null, (editPriority || null) as TaskPriority | null, editDueDate || null, dueAt, canAssign ? notificationTargetFromValue(editNotificationTargetValue) : null)
       setEditingTask(null)
       await refresh()
     } catch {
@@ -171,6 +198,7 @@ export default function TasksModulePage() {
         <label className="field">Priority<select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Use default{settings?.defaultPriority ? ` (${settings.defaultPriority})` : ''}</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
         <label className="field">Due date<input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
         <label className="field">Due time<input type="time" value={dueTime} disabled={!dueDate} onChange={(event) => setDueTime(event.target.value)} /></label>
+        {canAssign && <NotificationTargetField value={notificationTargetValue} options={notificationTargets} onChange={setNotificationTargetValue} defaultLabel="Myself (default)" />}
         <button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Adding…' : 'Add task'}</button>
         </form>}
       </>}
@@ -183,6 +211,7 @@ export default function TasksModulePage() {
           <label className="field">Priority<select value={editPriority} onChange={(event) => setEditPriority(event.target.value)}><option value="">No priority</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
           <label className="field">Due date<input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} /></label>
           <label className="field">Due time<input type="time" value={editDueTime} disabled={!editDueDate} onChange={(event) => setEditDueTime(event.target.value)} /></label>
+          {canAssign && <NotificationTargetField value={editNotificationTargetValue} options={notificationTargets} onChange={setEditNotificationTargetValue} defaultLabel="Task creator" />}
           <div className="task-edit-actions"><button className="button button-secondary" type="button" onClick={() => setEditingTask(null)}>Cancel</button><button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save task'}</button></div>
         </form>
       </section>}
@@ -194,9 +223,10 @@ export default function TasksModulePage() {
           {items.length === 0 ? <div className="empty-state">{showArchived ? 'No archived tasks yet.' : 'No tasks yet. Add one to get started.'}</div> : items.map((item) => {
             const category = categories.find((candidate) => candidate.id === item.categoryId)
             const canEdit = canEditAny || (canEditOwn && item.createdBy === session?.user.id)
+            const notificationTarget = item.notificationTarget?.type === 'everyone' ? 'Everyone' : item.notificationTarget ? notificationTargets.find((target) => notificationTargetSelectValue(item.notificationTarget) === `${target.type}:${target.id}`)?.label : null
             return <article className={`task-item${item.completedAt ? ' completed' : ''}`} key={item.id}>
               {!showArchived && <input aria-label={`Mark ${item.title} ${item.completedAt ? 'open' : 'complete'}`} checked={Boolean(item.completedAt)} disabled={!canComplete} onChange={() => void handleCompletion(item)} type="checkbox" />}
-              {canEdit ? <button className="task-item-copy task-edit-trigger" type="button" onClick={() => beginEdit(item)} aria-label={`Edit ${item.title}`}><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></button> : <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}</div></div>}
+              {canEdit ? <button className="task-item-copy task-edit-trigger" type="button" onClick={() => beginEdit(item)} aria-label={`Edit ${item.title}`}><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}{notificationTarget && <span>Notify {notificationTarget}</span>}</div></button> : <div className="task-item-copy"><h2>{item.title}</h2><div className="task-meta">{category && <span>{category.name}</span>}{item.priority && <span className={`priority priority-${item.priority}`}>{item.priority}</span>}{formatDueDate(item.dueDate) && <span>Due {formatDueDate(item.dueDate)}{formatDueTime(item.dueAt) ? ` at ${formatDueTime(item.dueAt)}` : ''}</span>}{notificationTarget && <span>Notify {notificationTarget}</span>}</div></div>}
               <div className="task-item-actions">{!showArchived && item.completedAt && canArchive && <button className="button button-quiet" type="button" onClick={() => void handleArchive(item)}>Archive</button>}{canDelete && <button className="button button-quiet task-delete" type="button" onClick={() => void handleDelete(item)}>Delete</button>}</div>
             </article>
           })}

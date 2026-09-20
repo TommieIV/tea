@@ -12,7 +12,9 @@ Tasks is TEA's first real, reusable module. It supports Personal, Household, and
 
 When a task leaves category or priority blank, the server resolves that field from the workspace defaults. Existing tasks retain their resolved values if defaults later change.
 
-Creating a task queues one notification for its creator. If a due time is set, it also queues one due notification for that creator. Delivery is handled by the shared push service and does not require TEA to be open. Tasks without a due time do not send a due notification.
+Creating a task queues one notification for its selected target; by default, that is its creator. If a due time is set, it also queues one due notification for that same target. Delivery is handled by the shared push service and does not require TEA to be open. Tasks without a due time do not send a due notification.
+
+Members with `tasks.items.assign` can select a notification target when creating or editing a task: Everyone, one active workspace member, or an Administration-defined group. A target is resolved at delivery time, so newly added or removed group members are respected by future notifications.
 
 ## Permissions
 
@@ -23,6 +25,7 @@ Creating a task queues one notification for its creator. If a due time is set, i
 - `tasks.items.delete`
 - `tasks.items.edit-own`
 - `tasks.items.edit-any`
+- `tasks.items.assign`
 - `tasks.settings.manage`
 
 ## Hosted setup

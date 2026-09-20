@@ -1,6 +1,6 @@
 # Workspace Administration
 
-This generic Core module lets an authorized workspace Owner create and edit workspaces, invite members, choose membership roles/statuses, set per-member permission overrides, and enable registered modules.
+This generic Core module lets an authorized workspace Owner create and edit workspaces, invite members, choose membership roles/statuses, set per-member permission overrides, define reusable workspace groups, and enable registered modules.
 
 Roles are baselines. A member-specific permission override may allow or deny a permission; the effective permission is enforced by the database permission resolver.
 

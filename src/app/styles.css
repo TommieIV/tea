@@ -166,6 +166,11 @@ h1 { margin: 6px 0 8px; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.055
 .admin-section { margin-top: 28px; }
 .admin-section h2 { margin: 0 0 6px; font-size: 1.2rem; }
 .admin-members, .admin-modules { display: grid; gap: 10px; margin-top: 14px; }
+.admin-group-form { display: grid; gap: 10px; margin-top: 14px; }
+.admin-group-form .field { margin: 0; }
+.group-member-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.group-member-picker label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #f0dfe1; border-radius: 999px; padding: 7px 10px; background: #fff8f8; color: #62484d; font-size: .82rem; }
+.group-member-picker input { accent-color: var(--tea-red); }
 .admin-member { border: 1px solid #f0dfe1; border-radius: 16px; background: #fff; }
 .admin-member summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; cursor: pointer; list-style: none; }
 .admin-member summary::-webkit-details-marker { display: none; }

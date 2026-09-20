@@ -25,8 +25,9 @@ begin
     'tasks.items.delete',
     'tasks.items.edit-own',
     'tasks.items.edit-any',
+    'tasks.items.assign',
     'tasks.settings.manage'
-  )) <> 8 then
+  )) <> 9 then
     raise exception 'The Tasks migrations have not been applied successfully. Run all Tasks migrations before enabling Tasks.';
   end if;
 
@@ -48,6 +49,7 @@ begin
     (owner_role_id, 'tasks.items.delete'),
     (owner_role_id, 'tasks.items.edit-own'),
     (owner_role_id, 'tasks.items.edit-any'),
+    (owner_role_id, 'tasks.items.assign'),
     (owner_role_id, 'tasks.settings.manage')
   on conflict do nothing;
 
