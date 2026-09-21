@@ -64,6 +64,7 @@ export default function TasksModulePage() {
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
   const [notificationTargetValue, setNotificationTargetValue] = useState('')
+  const [notifyCreatorOnCompletion, setNotifyCreatorOnCompletion] = useState(false)
   const [notificationTargets, setNotificationTargets] = useState<TaskNotificationTargetOption[]>([])
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null)
   const [editTitle, setEditTitle] = useState('')
@@ -72,6 +73,7 @@ export default function TasksModulePage() {
   const [editDueDate, setEditDueDate] = useState('')
   const [editDueTime, setEditDueTime] = useState('')
   const [editNotificationTargetValue, setEditNotificationTargetValue] = useState('')
+  const [editNotifyCreatorOnCompletion, setEditNotifyCreatorOnCompletion] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [isComposerOpen, setIsComposerOpen] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -107,13 +109,14 @@ export default function TasksModulePage() {
     setError(null)
     try {
       const dueAt = dueDate && dueTime ? new Date(`${dueDate}T${dueTime}`).toISOString() : null
-      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null, dueAt, canAssign ? notificationTargetFromValue(notificationTargetValue) : null)
+      await createTask(activeWorkspace.workspaceId, title, categoryId || null, (priority || null) as TaskPriority | null, dueDate || null, dueAt, canAssign ? notificationTargetFromValue(notificationTargetValue) : null, notifyCreatorOnCompletion)
       setTitle('')
       setCategoryId('')
       setPriority('')
       setDueDate('')
       setDueTime('')
       setNotificationTargetValue('')
+      setNotifyCreatorOnCompletion(false)
       await refresh()
     } catch {
       setError('The task could not be saved. Please try again.')
@@ -164,6 +167,7 @@ export default function TasksModulePage() {
     setEditDueDate(item.dueDate ?? '')
     setEditDueTime(timeInputValue(item.dueAt))
     setEditNotificationTargetValue(notificationTargetSelectValue(item.notificationTarget))
+    setEditNotifyCreatorOnCompletion(item.notifyCreatorOnCompletion)
   }
 
   async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
@@ -173,7 +177,7 @@ export default function TasksModulePage() {
     setError(null)
     try {
       const dueAt = editDueDate && editDueTime ? new Date(`${editDueDate}T${editDueTime}`).toISOString() : null
-      await updateTask(activeWorkspace.workspaceId, editingTask.id, editTitle, editCategoryId || null, (editPriority || null) as TaskPriority | null, editDueDate || null, dueAt, canAssign ? notificationTargetFromValue(editNotificationTargetValue) : null)
+      await updateTask(activeWorkspace.workspaceId, editingTask.id, editTitle, editCategoryId || null, (editPriority || null) as TaskPriority | null, editDueDate || null, dueAt, canAssign ? notificationTargetFromValue(editNotificationTargetValue) : null, editNotifyCreatorOnCompletion)
       setEditingTask(null)
       await refresh()
     } catch {
@@ -198,7 +202,8 @@ export default function TasksModulePage() {
         <label className="field">Priority<select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">Use default{settings?.defaultPriority ? ` (${settings.defaultPriority})` : ''}</option>{priorities.map((itemPriority) => <option key={itemPriority} value={itemPriority}>{itemPriority}</option>)}</select></label>
         <label className="field">Due date<input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
         <label className="field">Due time<input type="time" value={dueTime} disabled={!dueDate} onChange={(event) => setDueTime(event.target.value)} /></label>
-        {canAssign && <NotificationTargetField value={notificationTargetValue} options={notificationTargets} onChange={setNotificationTargetValue} defaultLabel="Myself (default)" />}
+        {canAssign && <NotificationTargetField value={notificationTargetValue} options={notificationTargets} onChange={setNotificationTargetValue} defaultLabel="Everyone (default)" />}
+        <label className="task-notification-toggle"><input type="checkbox" checked={notifyCreatorOnCompletion} onChange={(event) => setNotifyCreatorOnCompletion(event.target.checked)} />Notify me when this task is completed</label>
         <button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Adding…' : 'Add task'}</button>
         </form>}
       </>}
@@ -212,6 +217,7 @@ export default function TasksModulePage() {
           <label className="field">Due date<input type="date" value={editDueDate} onChange={(event) => setEditDueDate(event.target.value)} /></label>
           <label className="field">Due time<input type="time" value={editDueTime} disabled={!editDueDate} onChange={(event) => setEditDueTime(event.target.value)} /></label>
           {canAssign && <NotificationTargetField value={editNotificationTargetValue} options={notificationTargets} onChange={setEditNotificationTargetValue} defaultLabel="Task creator" />}
+          <label className="task-notification-toggle"><input type="checkbox" checked={editNotifyCreatorOnCompletion} onChange={(event) => setEditNotifyCreatorOnCompletion(event.target.checked)} />Notify creator when completed</label>
           <div className="task-edit-actions"><button className="button button-secondary" type="button" onClick={() => setEditingTask(null)}>Cancel</button><button className="button button-primary task-submit" type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save task'}</button></div>
         </form>
       </section>}

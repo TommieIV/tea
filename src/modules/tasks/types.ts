@@ -16,6 +16,7 @@ export type TaskItem = {
   completedAt: string | null
   createdBy: string
   notificationTarget: TaskNotificationTarget | null
+  notifyCreatorOnCompletion: boolean
 }
 
 export type TaskNotificationTarget = {

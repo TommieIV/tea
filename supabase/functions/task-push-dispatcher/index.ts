@@ -5,11 +5,12 @@ type PendingNotification = {
   id: string
   task_id: string
   user_id: string | null
-  kind: 'created' | 'due'
+  kind: 'created' | 'due' | 'completed'
   task_items: { title: string; workspace_id: string; completed_at: string | null; archived_at: string | null } | null
 }
 
 async function recipientUserIds(admin: ReturnType<typeof createClient>, item: PendingNotification) {
+  if (item.kind === 'completed' && item.user_id) return [item.user_id]
   const { data: target, error: targetError } = await admin.from('task_notification_targets').select('target_type, membership_id, group_id').eq('task_id', item.task_id).maybeSingle()
   if (targetError) throw targetError
   if (!target) return item.user_id ? [item.user_id] : []
@@ -41,8 +42,8 @@ function requireSecret(request: Request) {
 }
 
 function notificationFor(item: PendingNotification) {
-  const title = item.kind === 'due' ? 'Task due' : 'Task created'
-  const body = item.kind === 'due' ? `"${item.task_items?.title ?? 'A task'}" is due now.` : `"${item.task_items?.title ?? 'A task'}" was added to this workspace.`
+  const title = item.kind === 'due' ? 'Task due' : item.kind === 'completed' ? 'Task completed' : 'Task created'
+  const body = item.kind === 'due' ? `"${item.task_items?.title ?? 'A task'}" is due now.` : item.kind === 'completed' ? `"${item.task_items?.title ?? 'A task'}" was completed.` : `"${item.task_items?.title ?? 'A task'}" was added to this workspace.`
   return JSON.stringify({ title, body, url: '/modules/tasks', tag: `tea-task-${item.task_id}-${item.kind}` })
 }
 

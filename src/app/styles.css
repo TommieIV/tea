@@ -129,6 +129,8 @@ h1 { margin: 6px 0 8px; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.055
 .task-form .field { margin: 0; }
 .field select { width: 100%; min-height: 44px; border: 1px solid #dfc8cb; border-radius: 11px; padding: 10px; background: #fff; outline-color: var(--tea-red); }
 .task-submit { width: auto; margin-top: 0; }
+.task-notification-toggle { display: flex; align-items: center; gap: 8px; min-height: 44px; color: #62484d; font-size: .82rem; font-weight: 650; }
+.task-notification-toggle input { width: 18px; height: 18px; accent-color: var(--tea-red); }
 .task-list { display: grid; gap: 10px; }
 .task-list-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 2px; color: #62484d; }
 .task-list-controls .button { min-height: 38px; padding: 8px 11px; }
