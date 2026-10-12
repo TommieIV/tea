@@ -16,6 +16,12 @@ export function pushPermission() {
   return 'Notification' in window ? Notification.permission : 'denied'
 }
 
+export async function hasPushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false
+  const registration = await navigator.serviceWorker.ready
+  return Boolean(await registration.pushManager.getSubscription())
+}
+
 export async function enablePushNotifications() {
   const client = requirePushSupport()
   const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
